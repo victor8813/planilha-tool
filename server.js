@@ -24,10 +24,11 @@ function canDownloadToday(req) {
 }
 
 // Rota para upload e conversão da planilha
-// Verifica se o usuário já baixou uma planilha hoje
-if (req.cookies && req.cookies.downloaded) {
-    return res.redirect('/upload'); // Redireciona para a página de limite excedido
-}
+app.post('/upload', upload.single('file'), (req, res) => {
+    // Verifica se o usuário já baixou uma planilha hoje
+    if (req.cookies && req.cookies.downloaded) {
+        return res.redirect('/upload'); // Redireciona para a página de limite excedido
+    }
 
     if (!req.file) {
         return res.status(400).send('Nenhum arquivo enviado.');
@@ -64,16 +65,16 @@ if (req.cookies && req.cookies.downloaded) {
         }
 
         // Enviar o arquivo convertido para o cliente
-res.download(newFilePath, `planilha-convertida.${format}`, () => {
-    fs.unlinkSync(filePath); // Apagar o arquivo original
-    fs.unlinkSync(newFilePath); // Apagar o arquivo convertido
+        res.download(newFilePath, `planilha-convertida.${format}`, () => {
+            fs.unlinkSync(filePath); // Apagar o arquivo original
+            fs.unlinkSync(newFilePath); // Apagar o arquivo convertido
 
-    // Salvar um cookie para lembrar que o usuário baixou uma planilha
-    res.cookie("downloaded", "true", { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
+            // Salvar um cookie para lembrar que o usuário baixou uma planilha
+            res.cookie("downloaded", "true", { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
 
-    // Redirecionar para a página de limite excedido
-    res.redirect("/upload");
-});
+            // Redirecionar para a página de limite excedido
+            res.redirect("/upload");
+        });
 
     } else {
         // Caso o limite de downloads tenha sido atingido
