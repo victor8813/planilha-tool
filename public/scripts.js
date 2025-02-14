@@ -1,12 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
     const warningMessage = document.querySelector('.warning');
-    
+    const uploadSection = document.querySelector('.upload-section');
+    const pricingSection = document.querySelector('.pricing-section');
+
     // Simulando o limite de downloads
     let downloadCount = localStorage.getItem('downloadCount') || 0;
     
     if (downloadCount >= 1) {
         warningMessage.style.display = 'block';
-        document.querySelector('.upload-section').style.display = 'none'; // Esconde a área de upload
+        uploadSection.style.display = 'none'; // Esconde a área de upload
+        
+        // Rola automaticamente para a seção de pagamento
+        pricingSection.scrollIntoView({ behavior: "smooth" });
     }
 
     // Manipulando clique no link de assinatura
