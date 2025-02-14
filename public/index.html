@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Planilhas</title>
+</head>
+<body>
+    <h1>Conversor de Planilhas</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" required>
+        
+        <label for="format">Escolha o formato de saída:</label>
+        <select id="format" name="format">
+            <option value="xlsx">XLSX</option>
+            <option value="xls">XLS</option>
+            <option value="csv">CSV</option>
+            <option value="ods">ODS</option>
+            <option value="xlsb">XLSB</option>
+            <option value="xlsm">XLSM</option>
+        </select>
+
+        <button type="submit">Converter e Baixar</button>
+    </form>
+
+    <p id="status"></p>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const fileInput = document.getElementById("fileInput").files[0];
+            const format = document.getElementById("format").value;
+
+            if (!fileInput) {
+                alert("Selecione um arquivo!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+            formData.append("format", format);
+
+            document.getElementById("status").innerText = "Enviando...";
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const link = document.createElement("a");
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `planilha-convertida.${format}`;
+                link.click();
+                document.getElementById("status").innerText = "Download concluído!";
+            } else {
+                document.getElementById("status").innerText = "Erro ao enviar arquivo.";
+            }
+        });
+    </script>
+</body>
+</html>
