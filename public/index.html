@@ -3,63 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor de Planilhas</title>
+    <title>Conversor de Planilhas | Excel Tool</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Conversor de Planilhas</h1>
+    <div class="container">
+        <header class="header">
+            <h1>Conversor de Planilhas</h1>
+            <p>Converta suas planilhas para diferentes formatos</p>
+        </header>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="fileInput" name="file" required>
+        <section class="upload-section">
+            <h2>Faça o Upload de sua Planilha</h2>
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" id="file" required>
+                
+                <label for="format">Escolha o formato:</label>
+                <select name="format" id="format" required>
+                    <option value="csv">CSV</option>
+                    <option value="xls">XLS</option>
+                    <option value="xlsx">XLSX</option>
+                    <option value="ods">ODS</option>
+                    <option value="xlsb">XLSB</option>
+                    <option value="xlsm">XLSM</option>
+                </select>
+
+                <button type="submit">Converter Planilha</button>
+            </form>
+        </section>
+
+        <section class="pricing-section">
+            <h2>Assine para Acesso Vitalício</h2>
+            <p>Baixe uma planilha por dia gratuitamente. Para mais downloads, assine o plano vitalício!</p>
+            <a href="link_do_plano_vitalicio" class="button">Assine o Plano Vitalício</a>
+            <p class="warning">Limite de downloads excedido.</p>
+        </section>
         
-        <label for="format">Escolha o formato de saída:</label>
-        <select id="format" name="format">
-            <option value="xlsx">XLSX</option>
-            <option value="xls">XLS</option>
-            <option value="csv">CSV</option>
-            <option value="ods">ODS</option>
-            <option value="xlsb">XLSB</option>
-            <option value="xlsm">XLSM</option>
-        </select>
+        <footer>
+            <p>&copy; 2025 Conversor de Planilhas - Todos os direitos reservados.</p>
+        </footer>
+    </div>
 
-        <button type="submit">Converter e Baixar</button>
-    </form>
-
-    <p id="status"></p>
-
-    <script>
-        document.getElementById("uploadForm").addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const fileInput = document.getElementById("fileInput").files[0];
-            const format = document.getElementById("format").value;
-
-            if (!fileInput) {
-                alert("Selecione um arquivo!");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("file", fileInput);
-            formData.append("format", format);
-
-            document.getElementById("status").innerText = "Enviando...";
-
-            const response = await fetch("/upload", {
-                method: "POST",
-                body: formData
-            });
-
-            if (response.ok) {
-                const blob = await response.blob();
-                const link = document.createElement("a");
-                link.href = window.URL.createObjectURL(blob);
-                link.download = `planilha-convertida.${format}`;
-                link.click();
-                document.getElementById("status").innerText = "Download concluído!";
-            } else {
-                document.getElementById("status").innerText = "Erro ao enviar arquivo.";
-            }
-        });
-    </script>
+    <script src="scripts.js"></script>
 </body>
 </html>
