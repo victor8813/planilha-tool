@@ -1,41 +1,40 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const uploadForm = document.getElementById("uploadForm");
-    const popup = document.getElementById("popup");
-    const closePopup = document.getElementById("closePopup");
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById('uploadForm');
+    const popup = document.getElementById('popup');
+    const closePopup = document.getElementById('closePopup');
 
-    uploadForm.addEventListener("submit", function (event) {
-        event.preventDefault();
+    form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Impede o envio do formulário padrão
 
-        const formData = new FormData(uploadForm);
+        const formData = new FormData(form);
 
-        fetch("/upload", {
-            method: "POST",
-            body: formData
+        fetch('/upload', {
+            method: 'POST',
+            body: formData,
         })
-        .then(response => {
-            if (response.status === 403) {
-                popup.style.display = "flex";
-                throw new Error("Limite de downloads atingido.");
-            } else if (!response.ok) {
-                throw new Error("Erro ao converter a planilha.");
-            }
-            return response.blob();
+        .then((response) => response.blob())  // Usando 'response.blob()' para capturar o arquivo
+        .then((data) => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(data);
+            link.download = "planilha-convertida.xlsx"; // Nome padrão, pode ser alterado
+            link.click();
+
+            // Verificar o status de download e exibir o pop-up se necessário
+            fetch('/check-download-status')  // Endpoint para verificar o status de download
+                .then((res) => res.json())
+                .then((json) => {
+                    if (json.error) {
+                        popup.style.display = 'block'; // Exibir o pop-up
+                    }
+                });
         })
-        .then(blob => {
-            if (blob) {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "planilha-convertida.xlsx";
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            }
-        })
-        .catch(error => console.error(error.message));
+        .catch((error) => {
+            alert('Erro ao converter a planilha. Tente novamente.');
+        });
     });
 
-    closePopup.addEventListener("click", function () {
-        popup.style.display = "none";
+    // Fechar o pop-up
+    closePopup.addEventListener('click', () => {
+        popup.style.display = 'none';
     });
 });

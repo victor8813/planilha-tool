@@ -56,6 +56,13 @@ app.post('/upload', upload.single('file'), (req, res) => {
     }
 });
 
+app.get('/check-download-status', (req, res) => {
+    if (req.cookies && req.cookies.downloaded) {
+        return res.json({ error: "⚠️ Limite de downloads atingido!" });
+    }
+    return res.json({ success: "Download permitido!" });
+});
+
 app.get('/pagar', (req, res) => {
     res.cookie('isPaid', 'true', { maxAge: 365 * 24 * 60 * 60 * 1000 });
     res.send('✅ Pagamento confirmado! Agora você tem acesso vitalício aos downloads.');
