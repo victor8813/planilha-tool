@@ -42,6 +42,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
                 res.cookie('lastDownload', new Date().toISOString().slice(0, 10), { maxAge: 24 * 60 * 60 * 1000 });
             }
 
+            // Definir o cookie "downloaded" apenas após o download ser feito
             res.cookie("downloaded", "true", { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
 
             return res.download(newFilePath, `planilha-convertida.${format}`, () => {
@@ -54,13 +55,6 @@ app.post('/upload', upload.single('file'), (req, res) => {
     } else {
         return res.status(403).json({ error: "⚠️ Limite de downloads atingido! Assine o plano vitalício por R$ 5,99 para continuar baixando." });
     }
-});
-
-app.get('/check-download-status', (req, res) => {
-    if (req.cookies && req.cookies.downloaded) {
-        return res.json({ error: "⚠️ Limite de downloads atingido!" });
-    }
-    return res.json({ success: "Download permitido!" });
 });
 
 app.get('/pagar', (req, res) => {
