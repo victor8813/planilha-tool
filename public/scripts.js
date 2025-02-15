@@ -1,25 +1,45 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const popup = document.getElementById('popup');
-    const closePopup = document.getElementById('closePopup');
+document.getElementById('uploadForm').addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    // Verifica se o cookie de "downloaded" está presente
-    const downloaded = getCookie('downloaded');
+    const fileInput = document.getElementById('file');
+    const formatSelect = document.getElementById('format');
+    const statusText = document.getElementById('status');
 
-    // Se o cookie de "downloaded" estiver presente, exibe o pop-up
-    if (downloaded === 'true') {
-        popup.style.display = 'block';
+    if (!fileInput.files.length) {
+        statusText.textContent = "Por favor, selecione um arquivo.";
+        return;
     }
 
-    // Fecha o pop-up
-    closePopup.addEventListener('click', () => {
-        popup.style.display = 'none';
+    statusText.textContent = "Enviando arquivo... ⏳";
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('format', formatSelect.value);
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        const downloadUrl = `/download/${data.fileName}`;
+
+        statusText.textContent = "Download iniciado... 📥";
+
+        // Cria o link de download
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = data.fileName; // Nome do arquivo convertido
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    })
+    .catch(error => {
+        statusText.textContent = "Erro ao enviar o arquivo!";
+        console.error('Erro:', error);
     });
 });
-
-// Função para obter um cookie pelo nome
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}

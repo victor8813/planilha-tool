@@ -1,68 +1,87 @@
 const express = require('express');
-const multer = require('multer');
-const xlsx = require('xlsx');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+app.use(cookieParser()); // Adiciona o middleware de cookies
+app.use(fileUpload());
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cookieParser());
-app.use(express.static('public'));
+const uploadDir = path.join(__dirname, 'uploads');
 
-function isUserPaid(req) {
-    return req.cookies.isPaid === 'true';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
 }
 
-function canDownloadToday(req) {
-    const today = new Date().toISOString().slice(0, 10);
-    return req.cookies.lastDownload !== today;
-}
+app.post('/upload', (req, res) => {
+    const lastDownloadDate = req.cookies.lastDownloadDate;
+    const isVitalicio = req.cookies.vitalicio;
 
-app.post('/upload', upload.single('file'), (req, res) => {
-    if (req.cookies && req.cookies.downloaded) {
-        return res.status(403).json({ error: "⚠️ Limite de downloads atingido! Assine o plano vitalício por R$ 5,99 para continuar baixando." });
+    if (!req.files || !req.files.file) {
+        return res.status(400).json({ error: "Nenhum arquivo enviado." });
     }
 
-    if (!req.file) {
-        return res.status(400).send('Nenhum arquivo enviado.');
+    const file = req.files.file;
+    const extension = req.body.format; // Formato escolhido pelo usuário
+    const uploadPath = path.join(uploadDir, file.name);
+
+    const formatosValidos = ['csv', 'xls', 'xlsx', 'ods', 'xlsb', 'xlsm'];
+    if (!formatosValidos.includes(extension)) {
+        return res.status(400).json({ error: "Formato inválido." });
     }
 
-    if (isUserPaid(req) || canDownloadToday(req)) {
-        const format = req.body.format;
-        const filePath = req.file.path;
-        const workbook = xlsx.readFile(filePath);
-        const newFilePath = path.join(__dirname, 'uploads', `planilha-convertida.${format}`);
+    // Verifica se o usuário já fez o download hoje
+    const today = new Date().toISOString().split('T')[0]; // Data atual no formato 'YYYY-MM-DD'
+    if (!isVitalicio && lastDownloadDate === today) {
+        return res.status(400).json({ error: "Você só pode baixar uma vez por dia. Acesse o plano vitalício para baixar mais vezes." });
+    }
 
-        try {
-            xlsx.writeFile(workbook, newFilePath, { bookType: format });
+    file.mv(uploadPath, (err) => {
+        if (err) {
+            return res.status(500).json({ error: "Erro ao salvar o arquivo." });
+        }
 
-            if (!isUserPaid(req)) {
-                res.cookie('lastDownload', new Date().toISOString().slice(0, 10), { maxAge: 24 * 60 * 60 * 1000 });
+        // Definindo o nome fixo para o arquivo convertido
+        const fixedFileName = `arquivo_convertido.${extension}`;
+        const convertedFilePath = path.join(uploadDir, fixedFileName);
+
+        // Simulando conversão (apenas copiando o arquivo por enquanto)
+        fs.copyFile(uploadPath, convertedFilePath, (err) => {
+            if (err) {
+                return res.status(500).json({ error: "Erro ao converter o arquivo." });
             }
 
-            // Definir o cookie "downloaded" apenas após o download ser feito
-            res.cookie("downloaded", "true", { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
+            // Atualiza o cookie de data do download
+            res.cookie('lastDownloadDate', today, { maxAge: 86400000 }); // 24 horas
+            res.json({ fileName: fixedFileName });
+        });
+    });
+});
 
-            return res.download(newFilePath, `planilha-convertida.${format}`, () => {
-                fs.unlinkSync(filePath);
-                fs.unlinkSync(newFilePath);
-            });
-        } catch (error) {
-            return res.status(500).send('Erro ao converter o arquivo.');
-        }
+// Rota de download
+app.get('/download/:fileName', (req, res) => {
+    const fileName = req.params.fileName;
+    const filePath = path.join(uploadDir, fileName);
+
+    if (fs.existsSync(filePath)) {
+        res.download(filePath, fileName, (err) => {
+            if (err) {
+                res.status(500).send("Erro ao baixar o arquivo.");
+            }
+        });
     } else {
-        return res.status(403).json({ error: "⚠️ Limite de downloads atingido! Assine o plano vitalício por R$ 5,99 para continuar baixando." });
+        res.status(404).send("Arquivo não encontrado.");
     }
 });
 
-app.get('/pagar', (req, res) => {
-    res.cookie('isPaid', 'true', { maxAge: 365 * 24 * 60 * 60 * 1000 });
-    res.send('✅ Pagamento confirmado! Agora você tem acesso vitalício aos downloads.');
+// Rota de compra do plano vitalício
+app.get('/comprar-plano', (req, res) => {
+    res.cookie('vitalicio', true, { maxAge: 365 * 24 * 60 * 60 * 1000 }); // Cookie vitalício para 1 ano
+    res.send('Plano vitalício ativado. Agora você pode baixar ilimitadamente!');
 });
 
-const port = 3000;
-app.listen(port, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+app.listen(3000, () => {
+    console.log('Servidor rodando na porta 3000 🚀');
 });

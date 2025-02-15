@@ -12,6 +12,7 @@
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
     "fs": "^0.0.1-security",
     "mercadopago": "^2.3.0",
     "multer": "^1.4.5-lts.1",

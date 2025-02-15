@@ -3,60 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor de Planilhas | Excel Tool</title>
+    <title>Conversor de Planilhas</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos para a popup */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .popup button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .popup .close-btn {
+            background-color: red;
+            color: white;
+        }
+
+        .popup .buy-btn {
+            background-color: green;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>CONVERSOR DE PLANILHAS AUTOMÁTICO</h1>
-            <p>Converta suas planilhas para diferentes formatos dentro de segundos!!!</p>
-        </header>
+        <h1>Conversor de Planilhas 📊</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="file">Selecione uma planilha:</label>
+            <input type="file" id="file" name="file" required />
+            
+            <label for="format">Escolha o formato:</label>
+            <select id="format" name="format">
+                <option value="csv">CSV</option>
+                <option value="xls">XLS</option>
+                <option value="xlsx">XLSX</option>
+                <option value="ods">ODS</option>
+                <option value="xlsb">XLSB</option>
+                <option value="xlsm">XLSM</option>
+            </select>
 
-        <section class="upload-section">
-            <h2>Faça o Upload De Sua Planilha Grátis</h2>
-            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
-                <input type="file" name="file" id="file" required>
-                
-                <label for="format">Escolha o formato:</label>
-                <select name="format" id="format" required>
-                    <option value="csv">CSV</option>
-                    <option value="xls">XLS</option>
-                    <option value="xlsx">XLSX</option>
-                    <option value="ods">ODS</option>
-                    <option value="xlsb">XLSB</option>
-                    <option value="xlsm">XLSM</option>
-                </select>
-
-                <button type="submit">Converter Planilha</button>
-            </form>
-        </section>
-
-        <section class="pricing-section">
-            <h2>Assine para Acesso Vitalício</h2>
-            <p>Você pode baixar 01 planilha gratuitamente por dia. </p>
-            <p>Para mais downloads, assine nosso plano vitalício!</p>
-            <a href="https://mpago.la/24ZyUbz" class="button" target="_blank">
-                Assine o Plano Vitalício por R$ 5,99
-            </a>
-        </section>
-
-        <div id="popup" class="popup">
-            <div class="popup-content">
-                <h2>⚠️ Limite de Downloads Atingido ⚠️</h2>
-                <p>Você atingiu o limite de 1 download por dia. Para continuar baixando, assine o plano vitalício.</p>
-                <a href="https://mpago.la/24ZyUbz" class="button" target="_blank">
-                    Assinar Agora por R$ 5,99
-                </a>
-                <button id="closePopup">Fechar</button>
-            </div>
-        </div>
-
-        <footer>
-            <p>&copy; 2025 Conversor de Planilhas - Todos os direitos reservados.</p>
-        </footer>
+            <button type="submit">Converter</button>
+        </form>
+        
+        <p id="status"></p>
+        
+        <!-- Botão de download oculto inicialmente -->
+        <button id="downloadBtn" style="display: none;" onclick="downloadFile()">Baixar Arquivo Convertido</button>
     </div>
 
-    <script src="scripts.js"></script>
+    <!-- Popup -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <p>Você só pode baixar uma vez por dia, acesse o plano vitalício por R$ 5,99 e baixe quantas vezes quiser!</p>
+            <button class="close-btn" onclick="closePopup()">Fechar</button>
+            <button class="buy-btn" onclick="buyPlan()">Comprar Plano Vitalício</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const status = document.getElementById('status');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const popup = document.getElementById('popup');
+
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const formData = new FormData(uploadForm);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const fileName = data.fileName; // Nome do arquivo convertido recebido da resposta
+
+                // Atualiza o status e mostra o botão de download
+                status.textContent = 'Arquivo convertido com sucesso!';
+                downloadBtn.style.display = 'inline-block'; // Mostra o botão de download
+                downloadBtn.setAttribute('data-file', fileName); // Armazena o nome do arquivo no botão
+            } else {
+                const errorData = await response.json();
+                if (errorData.error === "Você só pode baixar uma vez por dia. Acesse o plano vitalício para baixar mais vezes.") {
+                    // Exibe a popup se o erro for relacionado ao limite de downloads
+                    showPopup();
+                } else {
+                    status.textContent = `Erro: ${errorData.error}`;
+                }
+            }
+        });
+
+        function downloadFile() {
+            const fileName = downloadBtn.getAttribute('data-file');
+            window.location.href = `/download/${fileName}`;
+        }
+
+        // Função para abrir a popup
+        function showPopup() {
+            popup.style.display = 'flex'; // Exibe a popup
+        }
+
+        // Função para fechar a popup
+        function closePopup() {
+            popup.style.display = 'none'; // Fecha a popup
+        }
+
+        // Função para redirecionar para a página de pagamento
+        function buyPlan() {
+            window.location.href = 'https://mpago.la/24ZyUbz'; // Redireciona para o link de pagamento
+        }
+    </script>
+    
+    <script src="script.js"></script>
 </body>
 </html>
