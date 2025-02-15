@@ -1,23 +1,35 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const warningMessage = document.querySelector('.warning');
-    const uploadSection = document.querySelector('.upload-section');
-    const pricingSection = document.querySelector('.pricing-section');
+document.addEventListener("DOMContentLoaded", function () {
+    const uploadForm = document.getElementById("uploadForm");
 
-    // Simulando o limite de downloads
-    let downloadCount = localStorage.getItem('downloadCount') || 0;
-    
-    if (downloadCount >= 1) {
-        warningMessage.style.display = 'block';
-        uploadSection.style.display = 'none'; // Esconde a área de upload
-        
-        // Rola automaticamente para a seção de pagamento
-        pricingSection.scrollIntoView({ behavior: "smooth" });
-    }
+    uploadForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const formData = new FormData(uploadForm);
 
-    // Manipulando clique no link de assinatura
-    document.querySelector('.button').addEventListener('click', function() {
-        // Redefine o contador de downloads se o usuário comprar o plano
-        localStorage.setItem('downloadCount', 0);
-        alert('Você agora tem acesso vitalício!');
+        fetch("/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showPopup(data.message);
+            } else {
+                alert("Arquivo convertido com sucesso! O download será iniciado.");
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error("Erro ao enviar arquivo:", error));
     });
 });
+
+// Função para exibir o popup
+function showPopup(message) {
+    const popup = document.getElementById("popup");
+    popup.style.display = "block";
+    popup.querySelector("p").innerText = message;
+}
+
+// Função para fechar o popup
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}

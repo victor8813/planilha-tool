@@ -11,18 +11,21 @@ const upload = multer({ dest: 'uploads/' });
 app.use(cookieParser());
 app.use(express.static('public'));
 
+// Função para verificar se o usuário pagou pelo plano vitalício
 function isUserPaid(req) {
     return req.cookies.isPaid === 'true';
 }
 
+// Função para verificar se o usuário já fez o download hoje
 function canDownloadToday(req) {
     const today = new Date().toISOString().slice(0, 10);
     return req.cookies.lastDownload !== today;
 }
 
+// Rota para upload e conversão da planilha
 app.post('/upload', upload.single('file'), (req, res) => {
     if (req.cookies && req.cookies.downloaded) {
-        return res.redirect('/limite-excedido');
+        return res.json({ error: true, message: 'Limite excedido! Assine o plano abaixo para continuar.' });
     }
 
     if (!req.file) {
@@ -49,38 +52,20 @@ app.post('/upload', upload.single('file'), (req, res) => {
             fs.unlinkSync(filePath);
             fs.unlinkSync(newFilePath);
             res.cookie("downloaded", "true", { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
-            res.redirect("/limite-excedido");
         });
+
     } else {
-        res.redirect('/limite-excedido');
+        res.json({ error: true, message: 'Limite excedido! Assine o plano abaixo para continuar.' });
     }
 });
 
-app.get('/limite-excedido', (req, res) => {
-    res.send(`
-        <html>
-        <head>
-            <title>Limite Excedido</title>
-            <script>
-                window.onload = function() {
-                    document.getElementById('pagamento').scrollIntoView({ behavior: 'smooth' });
-                }
-            </script>
-        </head>
-        <body>
-            <h2>Limite Excedido!</h2>
-            <p>Para baixar mais de 1 arquivo por dia, assine o plano vitalício.</p>
-            <a id="pagamento" href="/pagar" style="display:block; padding:10px; background:blue; color:white; text-align:center; width:200px;">Assine o Plano Vitalício</a>
-        </body>
-        </html>
-    `);
-});
-
+// Rota para simular o pagamento
 app.get('/pagar', (req, res) => {
     res.cookie('isPaid', 'true', { maxAge: 365 * 24 * 60 * 60 * 1000 });
     res.send('Você agora tem acesso vitalício para baixar arquivos!');
 });
 
+// Iniciar o servidor
 const port = 3000;
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
