@@ -15,7 +15,7 @@
 
         <section class="upload-section">
             <h2>Faça o Upload de sua Planilha</h2>
-            <form id="uploadForm" enctype="multipart/form-data">
+            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
                 <input type="file" name="file" id="file" required>
                 
                 <label for="format">Escolha o formato:</label>
@@ -35,23 +35,21 @@
         <section class="pricing-section">
             <h2>Assine para Acesso Vitalício</h2>
             <p>Baixe uma planilha por dia gratuitamente. Para mais downloads, assine o plano vitalício!</p>
-            <a href="https://mpago.la/24ZyUbz" class="button" target="_self">Assine o Plano Vitalício</a>
+            <a href="https://mpago.la/24ZyUbz" class="button" target="_blank">Assine o Plano Vitalício</a>
         </section>
+
+        <div id="popup" class="popup">
+            <div class="popup-content">
+                <h2>⚠️ Limite de Downloads Atingido ⚠️</h2>
+                <p>Você atingiu o limite de 1 download por dia. Para continuar baixando, assine o plano vitalício.</p>
+                <a href="https://mpago.la/24ZyUbz" class="button" target="_blank">Assinar Agora</a>
+                <button id="closePopup">Fechar</button>
+            </div>
+        </div>
 
         <footer>
             <p>&copy; 2025 Conversor de Planilhas - Todos os direitos reservados.</p>
         </footer>
-    </div>
-
-    <!-- Popup de alerta -->
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <h2>⚠️ Limite Excedido! ⚠️</h2>
-            <p>Você atingiu o limite de downloads diários.</p>
-            <p>Assine o plano vitalício abaixo para continuar.</p>
-            <a href="https://mpago.la/24ZyUbz" class="button">Assinar Agora</a>
-            <button onclick="closePopup()">Fechar</button>
-        </div>
     </div>
 
     <script src="scripts.js"></script>
