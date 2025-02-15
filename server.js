@@ -22,7 +22,7 @@ function canDownloadToday(req) {
 
 app.post('/upload', upload.single('file'), (req, res) => {
     if (req.cookies && req.cookies.downloaded) {
-        return res.status(403).json({ error: "Limite de downloads atingido" });
+        return res.status(403).json({ error: "⚠️ Limite de downloads atingido! Assine o plano vitalício por R$ 5,99 para continuar baixando." });
     }
 
     if (!req.file) {
@@ -52,16 +52,16 @@ app.post('/upload', upload.single('file'), (req, res) => {
             return res.status(500).send('Erro ao converter o arquivo.');
         }
     } else {
-        return res.status(403).json({ error: "Limite de downloads atingido" });
+        return res.status(403).json({ error: "⚠️ Limite de downloads atingido! Assine o plano vitalício por R$ 5,99 para continuar baixando." });
     }
 });
 
 app.get('/pagar', (req, res) => {
     res.cookie('isPaid', 'true', { maxAge: 365 * 24 * 60 * 60 * 1000 });
-    res.send('Você agora tem acesso vitalício para baixar arquivos!');
+    res.send('✅ Pagamento confirmado! Agora você tem acesso vitalício aos downloads.');
 });
 
 const port = 3000;
 app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });

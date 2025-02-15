@@ -15,9 +15,11 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => {
             if (response.status === 403) {
                 popup.style.display = "flex";
-            } else if (response.ok) {
-                return response.blob();
+                throw new Error("Limite de downloads atingido.");
+            } else if (!response.ok) {
+                throw new Error("Erro ao converter a planilha.");
             }
+            return response.blob();
         })
         .then(blob => {
             if (blob) {
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 a.remove();
             }
         })
-        .catch(error => console.error("Erro ao enviar arquivo:", error));
+        .catch(error => console.error(error.message));
     });
 
     closePopup.addEventListener("click", function () {
